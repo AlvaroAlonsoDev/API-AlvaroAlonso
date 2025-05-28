@@ -21,6 +21,7 @@ import UserModel from "../models/User.js";
 import { restrictedFields } from "../config/constants.js";
 import { handleHttp } from "../utils/res.handle.js";
 import 'dotenv/config';
+import 'dotenv/config';
 
 /**
  * Registra un nuevo usuario.
