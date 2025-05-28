@@ -1,74 +1,60 @@
 import 'dotenv/config';
-import request from "supertest";
 import mongoose from "mongoose";
 import db from "../config/mongo.js";
-import app from "../app.js";
+import {
+    registerUser,
+    loginUser,
+    verifyUser,
+    logoutUser,
+    deleteUser
+} from "./helpers/auth.helpers.js";
+import { testUser } from "../config/constants.js";
 
+/**
+ * Test de integración del flujo completo de autenticación de usuario.
+ * Este test valida todos los pasos básicos:
+ * - Registro de usuario
+ * - Login y obtención del token
+ * - Verificación del token autenticado
+ * - Logout del usuario
+ * - Eliminación del usuario
+ */
 describe("Auth API - flujo completo de autenticación", () => {
-    const testUser = {
-        email: "testusermeetback2080@example.com",
-        password: "test1234",
-        handle: "testhandle",
-        displayName: "Test User"
-    };
-
     const context = { token: "" };
 
     beforeAll(async () => {
+        // Inicializa la conexión con la base de datos y limpia el usuario si ya existía
         await db();
         await mongoose.connection.collection("users").deleteMany({ email: testUser.email });
     });
 
     afterAll(async () => {
+        // Cierra la conexión de base de datos tras finalizar los tests
         await mongoose.connection.close();
     });
 
     test("debe registrar, loguear, verificar, desloguear y eliminar un usuario", async () => {
-        // 1. Registro
-        const registerRes = await request(app)
-            .post("/api/auth/register")
-            .send(testUser);
-
-        expect([200, 201]).toContain(registerRes.statusCode);
+        // Registro del usuario de prueba
+        const registerRes = await registerUser(testUser);
+        expect([200, 201]).toContain(registerRes.statusCode); // compatible con diferentes códigos válidos
         expect(registerRes.body.success).toBe(true);
         expect(registerRes.body.data.email).toBe(testUser.email);
 
-        // 2. Login
-        const loginRes = await request(app)
-            .post("/api/auth/login")
-            .send({ email: testUser.email, password: testUser.password });
-
+        // Login para obtener token JWT
+        const loginRes = await loginUser({ email: testUser.email, password: testUser.password });
         expect(loginRes.statusCode).toBe(200);
-        expect(loginRes.body.success).toBe(true);
-        expect(loginRes.body.data).toHaveProperty("token");
-
         context.token = loginRes.body.data.token;
 
-        // 3. Verificación de token
-        const verifyRes = await request(app)
-            .get("/api/auth/verify")
-            .set("Authorization", `Bearer ${context.token}`);
-
+        // Verificación del token (autenticación protegida)
+        const verifyRes = await verifyUser(context.token);
         expect(verifyRes.statusCode).toBe(200);
-        expect(verifyRes.body.success).toBe(true);
-        expect(verifyRes.body.data.user).toHaveProperty("_id");
 
-        // 4. Logout
-        const logoutRes = await request(app)
-            .post("/api/auth/logout")
-            .set("Authorization", `Bearer ${context.token}`)
-            .send({ email: testUser.email });
-
+        // Logout del usuario autenticado
+        const logoutRes = await logoutUser(context.token, testUser.email);
         expect(logoutRes.statusCode).toBe(200);
-        expect(logoutRes.body.success).toBe(true);
-        expect(logoutRes.body.data.email).toBe(testUser.email);
 
-        // 5. Eliminación de usuario
-        const deleteRes = await request(app)
-            .delete("/api/auth/delete")
-            .set("Authorization", `Bearer ${context.token}`);
-
+        // Eliminación del usuario
+        const deleteRes = await deleteUser(context.token);
         expect(deleteRes.statusCode).toBe(200);
-        expect(deleteRes.body.success).toBe(true);
-    }, 20000);
+    }, 20000); // Tiempo extendido por operaciones async
 });

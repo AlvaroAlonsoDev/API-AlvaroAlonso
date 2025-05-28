@@ -24,6 +24,7 @@
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:auth": "npm test -- src/__tests__/auth.full-good-flow.test.js",
+    "test:follow": "npm test -- src/__tests__/follows.test.js",
     "start": "node ./src/index.js",
     "dev": "nodemon ./src/index.js"
   },
