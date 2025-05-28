@@ -20,6 +20,7 @@ import { generateToken } from "../utils/jwt.handle.js";
 import UserModel from "../models/User.js";
 import { restrictedFields } from "../config/constants.js";
 import { handleHttp } from "../utils/res.handle.js";
+import 'dotenv/config';
 
 /**
  * Registra un nuevo usuario.
@@ -125,6 +126,14 @@ export const logoutUser = async ({ email }) => {
  */
 export const deleteUser = async (req, res) => {
     try {
+        if (process.env.NODE_ENV !== 'test') {
+            return handleHttp(res, {
+                status: 403,
+                message: "No se puede eliminar el usuario en este momento",
+                errorCode: "FORBIDDEN_ENVIRONMENT"
+            });
+        }
+
         const { user } = req;
 
         if (!user) {
