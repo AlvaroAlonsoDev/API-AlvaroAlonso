@@ -1,0 +1,6 @@
+{
+    "js/ts.implicitProjectConfig.checkJs": false,
+    "typescript.validate.enable": false,
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true
+}
