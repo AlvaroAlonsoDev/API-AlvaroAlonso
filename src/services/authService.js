@@ -18,9 +18,9 @@ import mongoose from "mongoose";
 import { encrypt, verified } from "../utils/bcrypt.handle.js";
 import { generateToken } from "../utils/jwt.handle.js";
 import UserModel from "../models/User.js";
+import FollowModel from "../models/Follow.js";
 import { restrictedFields } from "../config/constants.js";
 import { handleHttp } from "../utils/res.handle.js";
-import 'dotenv/config';
 import 'dotenv/config';
 
 /**
@@ -126,26 +126,42 @@ export const logoutUser = async ({ email }) => {
  * @returns {object} - Respuesta estandarizada con estado y mensaje
  */
 export const deleteUser = async (req, res) => {
+    if (process.env.NODE_ENV !== 'test') {
+        return handleHttp(res, {
+            status: 403,
+            message: "No se puede eliminar el usuario en este momento",
+            errorCode: "FORBIDDEN_ENVIRONMENT"
+        });
+    }
+
+    const { user } = req;
+
+    if (!user) {
+        return handleHttp(res, {
+            status: 404,
+            message: "Usuario no encontrado",
+            errorCode: "USER_NOT_FOUND"
+        });
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
-        if (process.env.NODE_ENV !== 'test') {
-            return handleHttp(res, {
-                status: 403,
-                message: "No se puede eliminar el usuario en este momento",
-                errorCode: "FORBIDDEN_ENVIRONMENT"
-            });
-        }
+        // Borrar los follows del usuario (como follower o following)
+        await FollowModel.deleteMany({
+            $or: [
+                { follower: user._id },
+                { following: user._id }
+            ]
+        }).session(session);
 
-        const { user } = req;
+        // Borrar el usuario
+        await UserModel.findByIdAndDelete(user._id).session(session);
 
-        if (!user) {
-            return handleHttp(res, {
-                status: 404,
-                message: "Usuario no encontrado",
-                errorCode: "USER_NOT_FOUND"
-            });
-        }
-
-        await UserModel.findByIdAndDelete(user._id);
+        // Confirmar todo
+        await session.commitTransaction();
+        session.endSession();
 
         return handleHttp(res, {
             status: 200,
@@ -154,8 +170,8 @@ export const deleteUser = async (req, res) => {
         });
 
     } catch (error) {
-        console.log("Error al eliminar usuario:", error);
-
+        await session.abortTransaction();
+        session.endSession();
         return handleHttp(res, {
             status: 500,
             message: "Error interno al eliminar el usuario",

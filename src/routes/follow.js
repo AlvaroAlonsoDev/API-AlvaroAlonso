@@ -16,7 +16,4 @@ router.get("/followers/me", checkJwt, getMyFollowersCtrl);
 router.get("/following/:userId", getPublicFollowingCtrl);
 router.get("/followers/:userId", getPublicFollowersCtrl);
 
-
-
-
 export { router };

@@ -23,7 +23,6 @@ import {
   logoutUser,
   registerNewUser,
 } from "../services/authService.js";
-import UserModel from "../models/User.js";
 
 /**
  * Devuelve los datos del usuario autenticado y el token renovado.
