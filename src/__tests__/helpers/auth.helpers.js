@@ -31,3 +31,23 @@ export const deleteUser = async (token) => {
         .delete("/api/auth/delete")
         .set("Authorization", `Bearer ${token}`);
 };
+
+export const updateProfile = async (token, data) => {
+    return await request(app)
+        .put("/api/auth/profile")
+        .set("Authorization", `Bearer ${token}`)
+        .send(data);
+};
+
+export const changePassword = async (token, passwords) => {
+    return await request(app)
+        .put("/api/auth/change-password")
+        .set("Authorization", `Bearer ${token}`)
+        .send(passwords);
+};
+
+export const getProfile = async (token) => {
+    return await request(app)
+        .get("/api/auth/me")
+        .set("Authorization", `Bearer ${token}`);
+};

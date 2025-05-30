@@ -44,6 +44,19 @@ const UserSchema = new Schema(
             maxlength: 160,
             default: "",
         },
+        gender: {
+            type: String,
+            enum: ["male", "female", "custom", "N/A"],
+            default: "N/A"
+        },
+        birthDate: {
+            type: Date,
+            default: null,
+        },
+        location: {
+            type: String,
+            default: "",
+        },
         isHidden: {
             type: Boolean,
             default: false,

@@ -21,7 +21,9 @@ import UserModel from "../models/User.js";
 import FollowModel from "../models/Follow.js";
 import { restrictedFields } from "../config/constants.js";
 import { handleHttp } from "../utils/res.handle.js";
+import { nanoid } from "nanoid";
 import 'dotenv/config';
+import { hash } from "bcryptjs";
 
 /**
  * Registra un nuevo usuario.
@@ -44,12 +46,10 @@ export const registerNewUser = async ({ email, password, handle, displayName }) 
         }
 
         const passHash = await encrypt(password);
-        const role = "user";
 
         const newUserArr = await UserModel.create([{
             email,
             passwordHash: passHash,
-            role,
             displayName: displayName,
             handle: handle
         }], { session });
@@ -179,4 +179,126 @@ export const deleteUser = async (req, res) => {
             errorDetails: error
         });
     }
+};
+
+/**
+ * Actualiza el perfil de un usuario autenticado.
+ * 
+ * @param {string} userId 
+ * @param {object} updates - { displayName, description, gender }
+ * @returns {object} usuario actualizado
+ * @throws {Error} si el usuario no existe
+ */
+export const updateUserProfile = async (userId, updates) => {
+    const user = await UserModel.findById(userId);
+    if (!user) throw new Error("USER_NOT_FOUND");
+
+    if (updates.displayName !== undefined) user.displayName = updates.displayName;
+    if (updates.description !== undefined) user.description = updates.description;
+    if (updates.gender !== undefined) user.gender = updates.gender;
+
+    await user.save();
+
+    const userObject = user.toObject();
+    restrictedFields.forEach(field => delete userObject[field]);
+
+    return userObject;
+};
+
+/**
+ * Obtiene los datos públicos del usuario autenticado.
+ * 
+ * @param {string} userId 
+ * @returns {object} datos públicos del usuario
+ * @throws {Error} si no se encuentra el usuario
+ */
+export const getUserProfile = async (userId) => {
+    const user = await UserModel.findById(userId);
+    if (!user) throw new Error("USER_NOT_FOUND");
+
+    const userObject = user.toObject();
+    restrictedFields.forEach(field => delete userObject[field]);
+
+    return userObject;
+};
+
+/**
+ * Devuelve el perfil público de un usuario dado su handle.
+ * 
+ * @param {string} handle 
+ * @returns {object} datos públicos del usuario
+ * @throws {Error} si el usuario no existe o está oculto
+ */
+export const getPublicProfileByHandle = async (handle) => {
+    const user = await UserModel.findOne({ handle, isHidden: false });
+    if (!user) throw new Error("USER_NOT_FOUND");
+
+    const {
+        _id,
+        handle: userHandle,
+        displayName,
+        avatar,
+        description,
+        gender,
+        trustScore,
+        role,
+        createdAt,
+    } = user;
+
+    return {
+        _id,
+        handle: userHandle,
+        displayName,
+        avatar,
+        description,
+        gender,
+        trustScore,
+        role,
+        createdAt,
+    };
+};
+
+/**
+ * Simula la subida de un avatar generando una URL falsa
+ * y guardándola en el perfil del usuario.
+ * 
+ * @param {string} userId - ID del usuario autenticado
+ * @returns {string} - URL simulada del avatar
+ * @throws {Error} - Si el usuario no existe
+ */
+export const simulateAvatarUpload = async (userId) => {
+    const fakeFilename = `${nanoid()}.webp`;
+    const simulatedUrl = `https://fake-storage.meetback.app/avatars/${fakeFilename}`;
+
+    const user = await UserModel.findById(userId);
+    if (!user) throw new Error("USER_NOT_FOUND");
+
+    user.avatar = simulatedUrl;
+    await user.save();
+
+    return simulatedUrl;
+};
+
+/**
+ * Cambia la contraseña de un usuario autenticado.
+ * 
+ * @param {string} userId
+ * @param {string} currentPassword
+ * @param {string} newPassword
+ * @throws {Error} si la contraseña actual no es correcta o el usuario no existe
+ */
+export const changeUserPassword = async (userId, currentPassword, newPassword) => {
+    const user = await UserModel.findById(userId);
+    if (!user) throw new Error("USER_NOT_FOUND");
+
+    const isValid = await verified(currentPassword, user.passwordHash);
+    if (!isValid) throw new Error("INVALID_CURRENT_PASSWORD");
+
+    if (newPassword.length < 4) throw new Error("WEAK_PASSWORD");
+
+    user.passwordHash = await encrypt(newPassword);
+
+    await user.save();
+
+    return true;
 };
