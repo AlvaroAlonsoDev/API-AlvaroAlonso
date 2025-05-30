@@ -24,6 +24,7 @@ import { handleHttp } from "../utils/res.handle.js";
 import { nanoid } from "nanoid";
 import 'dotenv/config';
 import { hash } from "bcryptjs";
+import RatingModel from "../models/Rating.js";
 
 /**
  * Registra un nuevo usuario.
@@ -115,70 +116,6 @@ export const logoutUser = async ({ email }) => {
     await user.save();
 
     return user;
-};
-
-/**
- * Elimina un usuario por ID.
- * Verifica existencia previa y elimina de la base de datos.
- *
- * @param {object} req - Request con el usuario autenticado
- * @param {object} res - Response para enviar resultados
- * @returns {object} - Respuesta estandarizada con estado y mensaje
- */
-export const deleteUser = async (req, res) => {
-    if (process.env.NODE_ENV !== 'test') {
-        return handleHttp(res, {
-            status: 403,
-            message: "No se puede eliminar el usuario en este momento",
-            errorCode: "FORBIDDEN_ENVIRONMENT"
-        });
-    }
-
-    const { user } = req;
-
-    if (!user) {
-        return handleHttp(res, {
-            status: 404,
-            message: "Usuario no encontrado",
-            errorCode: "USER_NOT_FOUND"
-        });
-    }
-
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
-    try {
-        // Borrar los follows del usuario (como follower o following)
-        await FollowModel.deleteMany({
-            $or: [
-                { follower: user._id },
-                { following: user._id }
-            ]
-        }).session(session);
-
-        // Borrar el usuario
-        await UserModel.findByIdAndDelete(user._id).session(session);
-
-        // Confirmar todo
-        await session.commitTransaction();
-        session.endSession();
-
-        return handleHttp(res, {
-            status: 200,
-            message: "Usuario eliminado correctamente",
-            data: { email: user.email }
-        });
-
-    } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
-        return handleHttp(res, {
-            status: 500,
-            message: "Error interno al eliminar el usuario",
-            errorCode: "DELETE_USER_ERROR",
-            errorDetails: error
-        });
-    }
 };
 
 /**
@@ -301,4 +238,57 @@ export const changeUserPassword = async (userId, currentPassword, newPassword) =
     await user.save();
 
     return true;
+};
+
+/**
+ * Elimina un usuario de forma permanente, junto con sus relaciones de follow.
+ *
+ * @param {object} user - Objeto del usuario autenticado
+ * @returns {object} - { email }
+ * @throws {Error} - Si ocurre un error en la eliminación
+ */
+export const deleteUserService = async (user) => {
+    // if (process.env.NODE_ENV !== "test") {
+    //     const err = new Error("FORBIDDEN_ENVIRONMENT");
+    //     err.status = 403;
+    //     throw err;
+    // }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        // 1. Eliminar follows
+        await FollowModel.deleteMany({
+            $or: [
+                { follower: user._id },
+                { following: user._id }
+            ]
+        }).session(session);
+
+        // 2. Ocultar valoraciones donde el usuario fue emisor o receptor
+        await RatingModel.updateMany(
+            {
+                $or: [
+                    { fromUser: user._id },
+                    { toUser: user._id }
+                ]
+            },
+            { $set: { visibility: false } }
+        ).session(session);
+
+        // 3. Eliminar el usuario
+        await UserModel.findByIdAndDelete(user._id).session(session);
+
+        // 4. Confirmar la transacción
+        await session.commitTransaction();
+        session.endSession();
+
+        return { email: user.email };
+
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+    }
 };

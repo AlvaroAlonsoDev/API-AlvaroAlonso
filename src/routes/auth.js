@@ -8,11 +8,11 @@ import {
     updateProfileCtrl,
     uploadAvatarCtrl,
     verifyTokenCtrl,
-    changePasswordCtrl
+    changePasswordCtrl,
+    deleteUserCtrl
 } from "../controllers/authController.js";
 import { checkJwt } from "../middleware/checkJwt.js";
-import { deleteUser } from "../services/authService.js";
-import { uploadAvatar } from "../middleware/uploadImage.js";
+// import { uploadAvatar } from "../middleware/uploadImage.js";
 
 const router = Router();
 
@@ -56,7 +56,7 @@ router.post("/logout", checkJwt, logOutCtrl);
  * @desc    Elimina permanentemente la cuenta del usuario autenticado
  * @access  Privado
  */
-router.delete("/delete", checkJwt, deleteUser);
+router.delete("/delete", checkJwt, deleteUserCtrl);
 
 /**
  * @route   PUT /profile
@@ -87,4 +87,4 @@ router.put("/change-password", checkJwt, changePasswordCtrl);
  */
 router.get("/me", checkJwt, getProfileCtrl);
 
-export { router };
+export default router;

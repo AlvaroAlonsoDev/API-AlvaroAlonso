@@ -20,6 +20,7 @@
 import { handleHttp } from "../utils/res.handle.js";
 import {
   changeUserPassword,
+  deleteUserService,
   getPublicProfileByHandle,
   getUserProfile,
   loginUser,
@@ -400,6 +401,39 @@ export const changePasswordCtrl = async (req, res) => {
       message,
       errorCode: code,
       errorDetails: status === 500 ? error : null
+    });
+  }
+};
+
+/**
+ * Controlador para eliminar al usuario autenticado (solo en entorno de test).
+ */
+export const deleteUserCtrl = async (req, res) => {
+  try {
+    const { user } = req;
+
+    if (!user) {
+      return handleHttp(res, {
+        status: 404,
+        message: "Usuario no encontrado",
+        errorCode: "USER_NOT_FOUND"
+      });
+    }
+
+    const data = await deleteUserService(user);
+
+    return handleHttp(res, {
+      status: 200,
+      message: "Usuario eliminado correctamente",
+      data
+    });
+
+  } catch (error) {
+    return handleHttp(res, {
+      status: 500,
+      message: "Error al eliminar el usuario",
+      errorCode: "DELETE_USER_ERROR",
+      errorDetails: error
     });
   }
 };
