@@ -1,4 +1,4 @@
-# 🚀 MeetBack - MVP
+# 🚀 MVP
 
 **MeetBack** es una app de valoraciones sociales donde los usuarios pueden ser evaluados por otros en aspectos como humor, sinceridad, fiabilidad o creatividad. Este repositorio contiene el backend del MVP desarrollado con **Node.js** y **MongoDB**.
 
