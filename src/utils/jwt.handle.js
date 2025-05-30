@@ -1,5 +1,5 @@
 import pkg from 'jsonwebtoken';
-import { expiresToken } from '../config/config.js';
+import { expiresToken } from '../config/constants.js';
 const { sign, verify } = pkg;
 
 const JWT_SECRET = process.env.JWT_SECRET || "token.01010101";

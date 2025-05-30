@@ -61,4 +61,4 @@ router.get("/following/:userId", getPublicFollowingCtrl);
  */
 router.get("/followers/:userId", getPublicFollowersCtrl);
 
-export { router };
+export default router;
