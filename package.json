@@ -1,12 +1,16 @@
 {
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.817.0",
+    "@aws-sdk/s3-request-presigner": "^3.817.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.15.1",
-    "nanoid": "^5.1.5"
+    "multer": "^2.0.0",
+    "nanoid": "^5.1.5",
+    "sharp": "^0.34.2"
   },
   "type": "module",
   "devDependencies": {
@@ -22,9 +26,9 @@
   "description": "Valora otras personas, cumple los retos, añade a tus amigos o habla con quien quieras!",
   "main": "./src/index.js",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:auth": "npm test -- src/__tests__/auth.full-good-flow.test.js",
-    "test:follow": "npm test -- src/__tests__/follows.test.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand src/__tests__/auth/zfull-flow-auth.test.js src/__tests__/follow/zfull-flow-follow.test.js",
+    "test:auth": "npm test -- src/__tests__/auth/zfull-flow-auth.test.js",
+    "test:follow": "npm test -- src/__tests__/follow/zfull-flow-follow.test.js",
     "start": "node ./src/index.js",
     "dev": "nodemon ./src/index.js"
   },
