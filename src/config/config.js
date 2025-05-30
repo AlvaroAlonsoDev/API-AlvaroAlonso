@@ -1,1 +1,0 @@
-export const expiresToken = "100h";
