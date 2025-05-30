@@ -19,10 +19,17 @@
 
 import { handleHttp } from "../utils/res.handle.js";
 import {
+  changeUserPassword,
+  getPublicProfileByHandle,
+  getUserProfile,
   loginUser,
   logoutUser,
   registerNewUser,
+  simulateAvatarUpload,
+  updateUserProfile,
 } from "../services/authService.js";
+// import sharp from "sharp";
+// import { uploadToS3 } from "../utils/s3.js";
 
 /**
  * Devuelve los datos del usuario autenticado y el token renovado.
@@ -179,6 +186,220 @@ export const logOutCtrl = async ({ body }, res) => {
       message: "Error interno al cerrar sesión",
       errorCode: "LOGOUT_ERROR",
       errorDetails: error
+    });
+  }
+};
+
+/**
+ * Actualiza el perfil del usuario autenticado.
+ */
+export const updateProfileCtrl = async (req, res) => {
+  try {
+    const userId = req.user._id; // viene del middleware `checkJwt`
+    const { displayName, description, gender } = req.body;
+
+    const validGenders = ["male", "female", "custom", "N/A"];
+    if (gender && !validGenders.includes(gender)) {
+      return handleHttp(res, {
+        status: 400,
+        message: "Género no válido",
+        errorCode: "INVALID_GENDER"
+      });
+    }
+
+    const updatedUser = await updateUserProfile(userId, { displayName, description, gender });
+
+    return handleHttp(res, {
+      status: 200,
+      message: "Perfil actualizado",
+      data: updatedUser
+    });
+
+  } catch (error) {
+    const isNotFound = error.message === "USER_NOT_FOUND";
+
+    return handleHttp(res, {
+      status: isNotFound ? 404 : 500,
+      message: isNotFound ? "Usuario no encontrado" : "Error al actualizar perfil",
+      errorCode: isNotFound ? "NOT_FOUND" : "SERVER_ERROR",
+      errorDetails: !isNotFound ? error : null
+    });
+  }
+};
+
+/**
+ * Devuelve los datos del usuario autenticado.
+ */
+export const getProfileCtrl = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const user = await getUserProfile(userId);
+
+    return handleHttp(res, {
+      status: 200,
+      message: "Perfil obtenido correctamente",
+      data: user
+    });
+
+  } catch (error) {
+    const isNotFound = error.message === "USER_NOT_FOUND";
+
+    return handleHttp(res, {
+      status: isNotFound ? 404 : 500,
+      message: isNotFound ? "Usuario no encontrado" : "Error al obtener perfil",
+      errorCode: isNotFound ? "NOT_FOUND" : "SERVER_ERROR",
+      errorDetails: !isNotFound ? error : null
+    });
+  }
+};
+
+/**
+ * Devuelve el perfil público de un usuario por su handle.
+ */
+export const getPublicProfileCtrl = async (req, res) => {
+  try {
+    const { handle } = req.params;
+
+    if (!handle) {
+      return handleHttp(res, {
+        status: 400,
+        message: "El handle es requerido",
+        errorCode: "VALIDATION_ERROR",
+      });
+    }
+
+    const user = await getPublicProfileByHandle(handle.toLowerCase());
+
+    return handleHttp(res, {
+      status: 200,
+      message: "Perfil público obtenido",
+      data: user,
+    });
+
+  } catch (error) {
+    const isNotFound = error.message === "USER_NOT_FOUND";
+
+    return handleHttp(res, {
+      status: isNotFound ? 404 : 500,
+      message: isNotFound ? "Usuario no encontrado" : "Error al obtener perfil",
+      errorCode: isNotFound ? "NOT_FOUND" : "SERVER_ERROR",
+      errorDetails: !isNotFound ? error : null,
+    });
+  }
+};
+
+/**
+ * Procesa y sube un avatar nuevo para el usuario.
+ */
+// export const uploadAvatarCtrl = async (req, res) => {
+//   try {
+//     const userId = req.user._id;
+
+//     if (!req.file) {
+//       return handleHttp(res, {
+//         status: 400,
+//         message: "No se recibió ninguna imagen",
+//         errorCode: "NO_IMAGE"
+//       });
+//     }
+
+//     // Procesar imagen con sharp (resize y conversión a webp)
+//     const processedImage = await sharp(req.file.buffer)
+//       .resize(256, 256)
+//       .webp({ quality: 80 })
+//       .toBuffer();
+
+//     // Subir a S3
+//     const imageUrl = await uploadToS3(processedImage, "image/webp");
+
+//     // Guardar URL en el usuario
+//     const user = await UserModel.findById(userId);
+//     if (!user) throw new Error("USER_NOT_FOUND");
+
+//     user.avatar = imageUrl;
+//     await user.save();
+
+//     return handleHttp(res, {
+//       status: 200,
+//       message: "Avatar actualizado",
+//       data: { avatar: imageUrl }
+//     });
+
+//   } catch (error) {
+//     return handleHttp(res, {
+//       status: 500,
+//       message: "Error al subir avatar",
+//       errorCode: "SERVER_ERROR",
+//       errorDetails: error
+//     });
+//   }
+// };
+
+/**
+ * Controlador: simula la subida de un avatar para el usuario autenticado.
+ */
+export const uploadAvatarCtrl = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const avatarUrl = await simulateAvatarUpload(userId);
+
+    return handleHttp(res, {
+      status: 200,
+      message: "Avatar simulado actualizado",
+      data: { avatar: avatarUrl }
+    });
+
+  } catch (error) {
+    const isNotFound = error.message === "USER_NOT_FOUND";
+
+    return handleHttp(res, {
+      status: isNotFound ? 404 : 500,
+      message: isNotFound ? "Usuario no encontrado" : "Error al procesar avatar",
+      errorCode: isNotFound ? "NOT_FOUND" : "SERVER_ERROR",
+      errorDetails: !isNotFound ? error : null
+    });
+  }
+};
+
+/**
+ * Cambia la contraseña del usuario autenticado.
+ */
+export const changePasswordCtrl = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return handleHttp(res, {
+        status: 422,
+        message: "Contraseña actual y nueva son requeridas",
+        errorCode: "VALIDATION_ERROR"
+      });
+    }
+
+    await changeUserPassword(userId, currentPassword, newPassword);
+
+    return handleHttp(res, {
+      status: 200,
+      message: "Contraseña cambiada correctamente"
+    });
+
+  } catch (error) {
+    const messages = {
+      USER_NOT_FOUND: [404, "Usuario no encontrado", "NOT_FOUND"],
+      INVALID_CURRENT_PASSWORD: [401, "Contraseña actual incorrecta", "INVALID_PASSWORD"],
+      WEAK_PASSWORD: [400, "La nueva contraseña es demasiado débil", "WEAK_PASSWORD"]
+    };
+
+    const [status, message, code] = messages[error.message] || [500, "Error al cambiar contraseña", "SERVER_ERROR"];
+
+    return handleHttp(res, {
+      status,
+      message,
+      errorCode: code,
+      errorDetails: status === 500 ? error : null
     });
   }
 };

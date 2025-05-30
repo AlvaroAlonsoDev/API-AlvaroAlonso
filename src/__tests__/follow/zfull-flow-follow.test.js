@@ -1,12 +1,12 @@
 import 'dotenv/config';
 import mongoose from "mongoose";
-import db from "../config/mongo.js";
-import { testUser, targetUserId } from "../config/constants.js";
+import db from '../../config/mongo.js';
+import { testUser, targetUserId } from "../../config/constants.js";
 import {
     registerUser,
     loginUser,
     deleteUser
-} from "./helpers/auth.helpers.js";
+} from "../helpers/auth.helpers.js";
 
 import {
     followUser,
@@ -16,7 +16,7 @@ import {
     getMyFollowers,
     getPublicFollowers,
     getPublicFollowing
-} from "./helpers/follow.helpers.js";
+} from '../helpers/follow.helpers.js';
 
 /**
  * Test de integración completo del flujo de "follow" y "unfollow".

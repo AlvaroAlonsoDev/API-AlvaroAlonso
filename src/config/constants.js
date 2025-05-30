@@ -10,9 +10,9 @@ export const restrictedFields = [
 ];
 
 export const testUser = {
-    email: "followtestuser@example.com",
+    email: `test@test.com`,
     password: "test1234",
-    handle: "followtesthandle",
+    handle: `testhandle`,
     displayName: "Follow Test User"
 };
 
