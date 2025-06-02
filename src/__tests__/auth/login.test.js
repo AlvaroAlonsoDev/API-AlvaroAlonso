@@ -1,24 +1,28 @@
-import 'dotenv/config';
-import mongoose from 'mongoose';
-import db from '../../config/mongo.js';
-import { loginUser, registerUser } from '../helpers/auth.helpers.js';
-import { testUser } from '../../config/constants.js';
+import { testUserStatic } from "../../config/constants.js";
+import { assertTestResult } from "../utils/utils.js";
+import { testLoginCase } from "./testLoginCase.js";
 
-describe('Auth API - Login', () => {
-    beforeAll(async () => {
-        await db();
-        await mongoose.connection.collection('users').deleteMany({ email: testUser.email });
-        await registerUser(testUser);
-    });
+test("Login correcto", async () => {
+    const res = await testLoginCase({ email: testUserStatic.email, password: testUserStatic.password });
+    assertTestResult(res);
+});
 
-    afterAll(async () => {
-        await mongoose.connection.close();
-    });
+test("Login credenciales incorrectas", async () => {
+    const res = await testLoginCase({ email: testUserStatic.email, password: "error123" });
+    assertTestResult(res);
+});
 
-    test('debería loguear correctamente', async () => {
-        const res = await loginUser({ email: testUser.email, password: testUser.password });
-        expect(res.statusCode).toBe(200);
-        expect(res.body.success).toBe(true);
-        expect(res.body.data.token).toBeDefined();
-    });
+test("Login sin password", async () => {
+    const res = await testLoginCase({ email: testUserStatic.email });
+    assertTestResult(res);
+});
+
+test("Login sin email", async () => {
+    const res = await testLoginCase({ password: "algo" });
+    assertTestResult(res);
+});
+
+test("Login sin nada", async () => {
+    const res = await testLoginCase({});
+    assertTestResult(res);
 });

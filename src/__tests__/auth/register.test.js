@@ -1,23 +1,51 @@
-import 'dotenv/config';
-import mongoose from 'mongoose';
-import db from '../../config/mongo.js';
-import { registerUser } from '../helpers/auth.helpers.js';
-import { testUser } from '../../config/constants.js';
+import { registerUser } from "../helpers/auth.helpers.js";
+import { assertTestResult } from "../utils/utils.js";
+import { testRegisterCase } from "./testRegisterCase.js";
 
-describe('Auth API - Registro', () => {
-    beforeAll(async () => {
-        await db();
-        await mongoose.connection.collection('users').deleteMany({ email: testUser.email });
+// Caso 1: Registro correcto
+test("Register correcto", async () => {
+    const unique = Date.now();
+    const res = await testRegisterCase(registerUser, {
+        email: `testuser${unique}@gmail.com`,
+        password: "TestPassword123!",
+        handle: `user${unique}`,
+        displayName: "User Test"
     });
+    assertTestResult(res);
+});
 
-    afterAll(async () => {
-        await mongoose.connection.close();
+// Caso 2: Usuario ya existe
+test("Register usuario existente", async () => {
+    const unique = Date.now();
+    // Primero lo registramos para que exista
+    await registerUser({
+        email: `testuser${unique}@gmail.com`,
+        password: "TestPassword123!",
+        handle: `user${unique}`,
+        displayName: "User Test"
     });
+    // Intentamos de nuevo con los mismos datos
+    const res = await testRegisterCase(registerUser, {
+        email: `testuser${unique}@gmail.com`,
+        password: "TestPassword123!",
+        handle: `user${unique}`,
+        displayName: "User Test"
+    });
+    assertTestResult(res);
+});
 
-    test('debería registrar un usuario correctamente', async () => {
-        const res = await registerUser(testUser);
-        expect([200, 201]).toContain(res.statusCode);
-        expect(res.body.success).toBe(true);
-        expect(res.body.data.email).toBe(testUser.email);
+// Caso 3: Faltan campos
+test("Register con campos faltantes", async () => {
+    const res = await testRegisterCase(registerUser, {
+        email: "faltan@campos.com",
+        password: "TestPassword123!",
+        // Faltan handle y displayName
     });
+    assertTestResult(res);
+});
+
+// Caso 4: Registro sin ningún dato
+test("Register vacío", async () => {
+    const res = await testRegisterCase(registerUser, {});
+    assertTestResult(res);
 });
