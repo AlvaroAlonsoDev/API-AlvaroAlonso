@@ -29,6 +29,9 @@ import {
   simulateAvatarUpload,
   updateUserProfile,
 } from "../services/authService.js";
+import { getRatingsGivenByUser, getRatingsHistory, getUserRatingsStats } from "../services/ratingService.js";
+import { getPostsByUserService } from "../services/postService.js";
+import { getMyFollowers, getMyFollowing } from "../services/followUserService.js";
 // import sharp from "sharp";
 // import { uploadToS3 } from "../utils/s3.js";
 
@@ -235,17 +238,41 @@ export const getProfileCtrl = async (req, res) => {
   try {
     const userId = req.user._id;
 
+    // 1. Perfil público
     const user = await getUserProfile(userId);
+
+    // 2. Posts
+    const posts = await getPostsByUserService({ userId, page: 1, limit: 20 });
+
+    // 3. Valoraciones recibidas: historial y promedios
+    const ratingsHistory = await getRatingsHistory(userId);
+    const ratingsStats = await getUserRatingsStats(userId);
+
+    // 4. Seguidores y seguidos
+    const [followers, following] = await Promise.all([
+      getMyFollowers(userId),
+      getMyFollowing(userId)
+    ]);
+
+    // 5. Valoraciones emitidas
+    const ratingsGiven = await getRatingsGivenByUser(userId);
 
     return handleHttp(res, {
       status: 200,
       message: "Perfil obtenido correctamente",
-      data: user
+      data: {
+        user,
+        posts,
+        ratingsHistory,
+        ratingsStats,
+        ratingsGiven,
+        followersCount: followers,
+        followingCount: following
+      }
     });
 
   } catch (error) {
     const isNotFound = error.message === "USER_NOT_FOUND";
-
     return handleHttp(res, {
       status: isNotFound ? 404 : 500,
       message: isNotFound ? "Usuario no encontrado" : "Error al obtener perfil",
