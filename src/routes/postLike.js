@@ -9,20 +9,20 @@ const router = Router();
  * @desc    Dar like a un post
  * @access  Privado
  */
-router.post("/:postId/like", checkJwt, likePostCtrl);
+router.post("/:postId", checkJwt, likePostCtrl);
 
 /**
  * @route   DELETE /posts/:postId/like
  * @desc    Quitar like a un post
  * @access  Privado
  */
-router.delete("/:postId/like", checkJwt, unlikePostCtrl);
+router.delete("/:postId", checkJwt, unlikePostCtrl);
 
 /**
  * @route   GET /posts/:postId/likes
  * @desc    Lista los usuarios que han dado like a un post (paginado)
  * @access  Público
  */
-router.get("/:postId/likes", getLikesOfPostCtrl);
+router.get("/:postId", getLikesOfPostCtrl);
 
 export default router;

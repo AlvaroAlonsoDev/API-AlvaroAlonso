@@ -16,7 +16,14 @@ export const testUser = {
     email: `test${Date.now()}@test.com`,
     password: "test1234",
     handle: `testhandle${Date.now()}`,
-    displayName: "Follow Test User"
+    displayName: "Test Dinamic User"
+};
+
+export const testUserStatic = {
+    email: "test@test.com",
+    password: "test1234",
+    handle: "testhandle",
+    displayName: "Test Static User"
 };
 
 export const targetUserId = "68372fb26e490b47e8777793";

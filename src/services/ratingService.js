@@ -83,6 +83,9 @@ export const createRating = async ({ fromUserId, toUserId, ratings, comment }) =
             throw error;
         }
 
+        // TODO: Ia para verificar que el comentario es valido. (sin insultos, spam, etc.)
+        // ¿Si ya pasó el tiempo, eliminamos la anterior antes de crear la nueva?
+
         // Si pasaron los 7 días, eliminamos la anterior antes de crear la nueva
         await RatingModel.deleteOne({ _id: previous._id });
     }

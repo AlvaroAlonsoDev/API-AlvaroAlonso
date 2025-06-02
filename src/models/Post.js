@@ -13,7 +13,7 @@ const PostSchema = new Schema(
         threadRoot: { type: Schema.Types.ObjectId, ref: "posts", default: null },
 
         // Para adjuntos tipo imagen/video en el futuro:
-        media: [{ type: String }], // URLs o ids
+        media: { type: [String], default: [] },
 
         // Estadísticas simples (puedes incrementar aquí y tener consultas más rápidas)
         repliesCount: { type: Number, default: 0 },

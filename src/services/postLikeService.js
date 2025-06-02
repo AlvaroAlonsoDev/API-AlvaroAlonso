@@ -39,7 +39,7 @@ export const getLikesOfPostService = async ({ postId, page = 1, limit = 20 }) =>
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate("user", "username name avatar _id")
+        .populate("user", "handle displayName avatar _id")
         .lean();
 
     // Devuelve solo los usuarios, si quieres más info puedes devolver el like completo

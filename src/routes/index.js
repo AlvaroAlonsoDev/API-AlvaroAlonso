@@ -11,6 +11,6 @@ router.use('/api/auth', authRouter);
 router.use('/api/follow', followRouter);
 router.use('/api/rating', ratingRouter);
 router.use('/api/post', postRouter);
-router.unsubscribe('/api/like', postLikeRouter);
+router.use('/api/like', postLikeRouter);
 
 export { router };

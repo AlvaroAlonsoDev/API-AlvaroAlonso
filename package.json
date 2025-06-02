@@ -27,10 +27,12 @@
   "main": "./src/index.js",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:full": "npm test --runInBand src/__tests__/auth/zfull-flow-auth.test.js src/__tests__/follow/zfull-flow-follow.test.js src/__tests__/rating/zfull-flow-rating.test.js",
-    "test:auth": "npm test -- src/__tests__/auth/zfull-flow-auth.test.js",
-    "test:follow": "npm test -- src/__tests__/follow/zfull-flow-follow.test.js",
-    "test:rating": "npm test -- src/__tests__/rating/zfull-flow-rating.test.js",
+    "test:full-flow": "npm test -- src/__tests__/zfull-flow.test.js",
+    "test:full": "npm test --runInBand src/__tests__/zfull-flow-auth.test.js src/__tests__/zfull-flow-follow.test.js src/__tests__/zfull-flow-rating.test.js src/__tests__/zfull-flow-post.test.js",
+    "test:auth": "npm test -- src/__tests__/zfull-flow-auth.test.js",
+    "test:follow": "npm test -- src/__tests__/zfull-flow-follow.test.js",
+    "test:rating": "npm test -- src/__tests__/zfull-flow-rating.test.js",
+    "test:post": "npm test -- src/__tests__/zfull-flow-post.test.js",
     "start": "node ./src/index.js",
     "dev": "nodemon ./src/index.js"
   },
