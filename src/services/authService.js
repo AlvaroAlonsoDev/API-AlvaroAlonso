@@ -103,6 +103,29 @@ export const loginUser = async ({ email, password }) => {
 };
 
 /**
+ * Devuelve los datos públicos de usuario y un nuevo token.
+ * @param {string} userId
+ * @returns {object} - { user, token }
+ * @throws {Error} - Si no encuentra el usuario
+ */
+export const getUserSessionData = async (userId, newToken) => {
+    const user = await UserModel.findById(userId);
+    if (!user) throw new Error("USER_NOT_FOUND");
+
+    // Opcional: actualizar último acceso, etc.
+    user.lastLogin = new Date();
+    await user.save();
+
+    const userObject = user.toObject();
+    restrictedFields.forEach(field => delete userObject[field]);
+
+    return {
+        user: userObject,
+        token: newToken
+    };
+};
+
+/**
  * Cierra sesión actualizando el campo `accountStatus`.
  *
  * @param {object} param0 - { email }

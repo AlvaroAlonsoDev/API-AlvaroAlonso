@@ -23,6 +23,7 @@ import {
   deleteUserService,
   getPublicProfileByHandle,
   getUserProfile,
+  getUserSessionData,
   loginUser,
   logoutUser,
   registerNewUser,
@@ -43,16 +44,13 @@ export const verifyTokenCtrl = async (req, res) => {
   try {
     const { user } = req;
     const token = res.locals.newToken;
+    const sessionData = await getUserSessionData(user._id, token);
 
     return handleHttp(res, {
       status: 200,
       message: "Token verificado correctamente",
-      data: {
-        user,
-        token
-      }
+      data: sessionData,
     });
-
   } catch (error) {
     return handleHttp(res, {
       status: 500,
@@ -62,7 +60,6 @@ export const verifyTokenCtrl = async (req, res) => {
     });
   }
 };
-
 /**
  * Registra un nuevo usuario.
  * Requiere: email, password (y opcional username).

@@ -117,7 +117,7 @@ export const getPostByIdCtrl = async ({ params }, res) => {
 /**
  * Devuelve el feed de un usuario (posts de los usuarios que sigue)
  */
-export const getFeedPostsCtrl = async ({ params, query, user }, res) => {
+export const getFeedPostsCtrl = async ({ query, user }, res) => {
     try {
         const userId = user._id;
         const { page = 1, limit = 10 } = query;
