@@ -9,9 +9,11 @@ import {
     uploadAvatarCtrl,
     verifyTokenCtrl,
     changePasswordCtrl,
-    deleteUserCtrl
+    deleteUserCtrl,
+    getCloseToMeCtrl
 } from "../controllers/authController.js";
 import { checkJwt } from "../middleware/checkJwt.js";
+import { get } from "mongoose";
 // import { uploadAvatar } from "../middleware/uploadImage.js";
 
 const router = Router();
@@ -86,5 +88,12 @@ router.put("/change-password", checkJwt, changePasswordCtrl);
  * @access  Privado
  */
 router.get("/me", checkJwt, getProfileCtrl);
+
+/**
+ * @route   GET /close-to-me
+ * @desc    Devuelve usuarios cercanos al usuario autenticado
+ * @access  Privado
+ */
+router.get("/close-to-me", checkJwt, getCloseToMeCtrl);
 
 export default router;

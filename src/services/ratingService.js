@@ -156,7 +156,7 @@ export const getRatingsGivenByUser = async (fromUserId) => {
         const rating = ratingDoc.toObject();
         return {
             _id: rating._id,
-            to: rating.toUser,
+            toUser: rating.toUser,
             ratings: rating.ratings,
             comment: rating.comment || null,
             createdAt: rating.createdAt,

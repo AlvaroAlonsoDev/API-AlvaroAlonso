@@ -315,3 +315,35 @@ export const deleteUserService = async (user) => {
         throw error;
     }
 };
+
+/**
+ * Obtiene 4 usuarios aleatorios (excluyendo el usuario autenticado).
+ * 
+ * @param {object} user - Usuario autenticado
+ * @returns {Array} - Lista de 4 usuarios aleatorios
+ * @throws {Error} - Si ocurre un error al buscar usuarios
+ */
+export const getCloseToMeService = async (user) => {
+    const userId = user._id.toString(); // Aseguramos string por si acaso
+    try {
+        // Traemos todos los usuarios menos el autenticado
+        const users = await UserModel.find({ _id: { $ne: userId } })
+            .select("-passwordHash -email -lastLogin");
+
+        // Los pasamos a objetos JS normales y limpiamos los campos restringidos
+        const cleanUsers = users.map(u => {
+            const userObject = u.toObject();
+            restrictedFields.forEach(field => delete userObject[field]);
+            return userObject;
+        });
+
+        // Mezclamos aleatoriamente el array de usuarios
+        const shuffled = cleanUsers.sort(() => 0.5 - Math.random());
+
+        // Seleccionamos los primeros 4 o menos si hay menos usuarios
+        return shuffled.slice(0, 4);
+
+    } catch (error) {
+        throw new Error("CLOSE_TO_ME_ERROR");
+    }
+};

@@ -21,6 +21,7 @@ import { handleHttp } from "../utils/res.handle.js";
 import {
   changeUserPassword,
   deleteUserService,
+  getCloseToMeService,
   getPublicProfileByHandle,
   getUserProfile,
   getUserSessionData,
@@ -457,6 +458,32 @@ export const deleteUserCtrl = async (req, res) => {
       status: 500,
       message: "Error al eliminar el usuario",
       errorCode: "DELETE_USER_ERROR",
+      errorDetails: error
+    });
+  }
+};
+
+/**
+ * Controlador para obtener usuarios cercanos al usuario autenticado.
+ * Esta funcionalidad aún no está implementada.
+ */
+export const getCloseToMeCtrl = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    // Simular el servicio de usuarios cercanos
+    // En un futuro, este servicio debería buscar usuarios cercanos basándose en la ubicación del usuario autenticado.
+    const users = await getCloseToMeService(userId);
+
+    return handleHttp(res, {
+      status: 200,
+      message: "Simulación de usuarios cercanos",
+      data: users
+    });
+  } catch (error) {
+    return handleHttp(res, {
+      status: 500,
+      message: "Error al obtener usuarios cercanos",
+      errorCode: "SERVER_ERROR",
       errorDetails: error
     });
   }

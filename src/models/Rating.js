@@ -27,7 +27,7 @@ const RatingSchema = new Schema(
         },
         comment: {
             type: String,
-            maxlength: 500,
+            maxlength: 250,
             default: "",
         },
         weight: {
