@@ -71,6 +71,7 @@ export const createRating = async ({ fromUserId, toUserId, ratings, comment }) =
         fromUser: fromUserId,
         toUser: toUserId,
     });
+    // TODO: Ia para verificar que el comentario es valido. (sin insultos, spam, etc.)
 
     if (previous) {
         const lastTime = new Date(previous.createdAt).getTime();
@@ -83,11 +84,10 @@ export const createRating = async ({ fromUserId, toUserId, ratings, comment }) =
             throw error;
         }
 
-        // TODO: Ia para verificar que el comentario es valido. (sin insultos, spam, etc.)
         // ¿Si ya pasó el tiempo, eliminamos la anterior antes de crear la nueva?
 
         // Si pasaron los 7 días, eliminamos la anterior antes de crear la nueva
-        await RatingModel.deleteOne({ _id: previous._id });
+        // await RatingModel.deleteOne({ _id: previous._id });
     }
 
     const newRating = await RatingModel.create({
@@ -98,7 +98,18 @@ export const createRating = async ({ fromUserId, toUserId, ratings, comment }) =
         weight: 1,
     });
 
-    return newRating;
+    // Hacemos populate sobre el documento recién creado
+    const populatedRating = await RatingModel.findById(newRating._id)
+        .populate({
+            path: "toUser",
+            select: "handle displayName avatar",
+        })
+        .populate({
+            path: "fromUser",
+            select: "handle displayName avatar",
+        });
+
+    return populatedRating;
 };
 
 /**
