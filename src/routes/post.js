@@ -1,7 +1,7 @@
 // routes/post.js
 import { Router } from "express";
 import { checkJwt } from "../middleware/checkJwt.js";
-import { createPostCtrl, deletePostCtrl, getFeedPostsCtrl, getPostByIdCtrl, getPostsByUserCtrl, getRepliesCtrl } from "../controllers/postController.js";
+import { createPostCtrl, deletePostCtrl, getAllPostsCtrl, getFeedPostsCtrl, getPostByIdCtrl, getPostsByUserCtrl, getRepliesCtrl } from "../controllers/postController.js";
 
 const router = Router();
 
@@ -46,5 +46,13 @@ router.get("/:postId/replies", getRepliesCtrl);
  * @access  Privado (autor)
  */
 router.delete("/:id", checkJwt, deletePostCtrl);
+
+/**
+ * @route   GET /posts/all
+ * @desc    Devuelve todos los posts (públicos)
+ * @access  Público (o Privado, según lo que decidas)
+ */
+// TODO: Que hacemos con este endpoint? ¿Lo dejamos para admins?
+router.get("/admin/all", checkJwt, getAllPostsCtrl);
 
 export default router;

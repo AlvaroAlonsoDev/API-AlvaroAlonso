@@ -131,12 +131,12 @@ export const getPostByIdService = async (id) => {
  * @returns {array} - Feed de posts con likedByMe
  */
 export const getFeedPostsService = async ({ userId, page = 1, limit = 10 }) => {
-    // 1. Obtener a quién sigue
+    // 1. Obtener a quién sigue el usuario
     const follows = await FollowModel.find({ follower: userId }).select("following");
-    const followingIds = follows.map(f => f.following);
+    const followingIds = follows.map(f => String(f.following));
 
-    // Incluir los posts del propio usuario
-    followingIds.push(userId);
+    // Incluimos el propio usuario (para ver sus posts)
+    followingIds.push(String(userId));
 
     if (!followingIds.length) return [];
 
@@ -177,13 +177,20 @@ export const getFeedPostsService = async ({ userId, page = 1, limit = 10 }) => {
     // 5. Crear un Set con los postId a los que el usuario ha dado like
     const likedPostIds = new Set(likes.map(like => String(like.post)));
 
-    // 6. Añadir likedByMe a cada post
-    const postsWithLikedByMe = posts.map(post => ({
+    // 6. Crear un Set con los IDs de los autores que sigue (para comparación rápida)
+    const followedAuthors = new Set(followingIds);
+
+    // 7. Añadir likedByMe y authorFollowedByMe a cada post
+    const postsWithExtras = posts.map(post => ({
         ...post,
-        likedByMe: likedPostIds.has(String(post._id))
+        likedByMe: likedPostIds.has(String(post._id)),
+        authorFollowedByMe: (
+            String(post.author._id) !== String(userId) && // opcional: evita que marque como seguido a sí mismo
+            followedAuthors.has(String(post.author._id))
+        )
     }));
 
-    return postsWithLikedByMe;
+    return postsWithExtras;
 };
 
 /**
@@ -228,4 +235,66 @@ export const deletePostService = async ({ postId }) => {
     await post.save();
 
     return post;
+};
+
+/**
+ * Devuelve todos los posts, incluyendo datos del autor y replyTo,
+ * y añade likedByMe y authorFollowedByMe para el usuario actual.
+ *
+ * @param {object} param0 - { userId }
+ * @returns {array} - Todos los posts con extras
+ */
+export const getAllPostsService = async ({ userId }) => {
+    // 1. Obtener a quién sigue el usuario
+    const follows = await FollowModel.find({ follower: userId }).select("following");
+    const followingIds = follows.map(f => String(f.following));
+
+    // Incluimos el propio usuario (opcional, si quieres que se marque como seguido)
+    followingIds.push(String(userId));
+
+    // 2. Buscar todos los posts
+    const posts = await PostModel.find()
+        .sort({ createdAt: -1 })
+        .populate([
+            {
+                path: "author",
+                select: "handle displayName avatar _id"
+            },
+            {
+                path: "replyTo",
+                select: "author content _id",
+                populate: {
+                    path: "author",
+                    select: "handle displayName avatar _id"
+                }
+            }
+        ])
+        .lean();
+
+    // 3. Sacar todos los IDs de los posts para consultar los likes de golpe
+    const postIds = posts.map(post => post._id);
+
+    // 4. Buscar todos los likes del usuario actual a esos posts (un solo query)
+    const likes = await PostLikeModel.find({
+        user: userId,
+        post: { $in: postIds }
+    }).select("post").lean();
+
+    // 5. Crear un Set con los postId a los que el usuario ha dado like
+    const likedPostIds = new Set(likes.map(like => String(like.post)));
+
+    // 6. Crear un Set con los IDs de los autores que sigue (para comparación rápida)
+    const followedAuthors = new Set(followingIds);
+
+    // 7. Añadir likedByMe y authorFollowedByMe a cada post
+    const postsWithExtras = posts.map(post => ({
+        ...post,
+        likedByMe: likedPostIds.has(String(post._id)),
+        authorFollowedByMe: (
+            String(post.author._id) !== String(userId) && // Evita marcarse a sí mismo
+            followedAuthors.has(String(post.author._id))
+        )
+    }));
+
+    return postsWithExtras;
 };

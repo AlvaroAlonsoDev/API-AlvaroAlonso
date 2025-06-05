@@ -1,5 +1,5 @@
 // controllers/post.js
-import { createPostService, deletePostService, getFeedPostsService, getPostByIdService, getPostsByUserService, getRepliesService } from "../services/postService.js";
+import { createPostService, deletePostService, getAllPostsService, getFeedPostsService, getPostByIdService, getPostsByUserService, getRepliesService } from "../services/postService.js";
 import { handleHttp } from "../utils/res.handle.js";
 
 /**
@@ -215,6 +215,29 @@ export const deletePostCtrl = async ({ params }, res) => {
             message: error.message || "Error al borrar el post",
             errorCode: error.errorCode || "SERVER_ERROR",
             errorDetails: error.errorDetails || null
+        });
+    }
+};
+
+/**
+ * Devuelve todos los posts, paginados
+ */
+export const getAllPostsCtrl = async ({ user }, res) => {
+    try {
+        const userId = user._id;
+        const posts = await getAllPostsService({ userId });
+
+        return handleHttp(res, {
+            status: 200,
+            message: "Posts obtenidos correctamente",
+            data: posts
+        });
+    } catch (error) {
+        return handleHttp(res, {
+            status: 500,
+            message: "Error al obtener los posts",
+            errorCode: "SERVER_ERROR",
+            errorDetails: error
         });
     }
 };
