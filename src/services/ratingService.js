@@ -140,7 +140,7 @@ export const getRatingsHistory = async (toUserId) => {
         const rating = ratingDoc.toObject();
         return {
             _id: rating._id,
-            from: rating.fromUser,
+            fromUser: rating.fromUser,
             ratings: rating.ratings,
             comment: rating.comment || null,
             createdAt: rating.createdAt,
