@@ -11,6 +11,13 @@ export const followUserCtrl = async (req, res) => {
 
         const follow = await followUser({ follower, following });
 
+        await createLogService({
+            level: "info",
+            message: "Usuario comenzó a seguir a otro usuario",
+            meta: { follower, following, followId: follow?._id },
+            user: follower
+        });
+
         return handleHttp(res, {
             status: 201,
             message: "Has comenzado a seguir al usuario",
@@ -20,18 +27,31 @@ export const followUserCtrl = async (req, res) => {
         let status = 500;
         let message = "Error interno al seguir al usuario";
         let errorCode = "SERVER_ERROR";
+        let logLevel = "error";
+        let logMessage = "Error interno al seguir al usuario";
 
         if (error.code === "NO_SELF_FOLLOW") {
             status = 400;
             message = "No puedes seguirte a ti mismo";
             errorCode = "INVALID_ACTION";
+            logLevel = "warn";
+            logMessage = "Intento de autoseguimiento";
         }
 
         if (error.code === "ALREADY_FOLLOWING") {
             status = 400;
             message = "Ya estás siguiendo a este usuario";
             errorCode = "DUPLICATE_FOLLOW";
+            logLevel = "warn";
+            logMessage = "Intento de seguir a un usuario ya seguido";
         }
+
+        await createLogService({
+            level: logLevel,
+            message: logMessage,
+            meta: { follower: req.user._id, following: req.params.userId, error: error?.message, code: error?.code, stack: error?.stack },
+            user: req.user._id
+        });
 
         return handleHttp(res, {
             status,
@@ -53,6 +73,13 @@ export const unfollowUserCtrl = async (req, res) => {
 
         const result = await unfollowUser({ follower, following });
 
+        await createLogService({
+            level: "info",
+            message: "Usuario dejó de seguir a otro usuario",
+            meta: { follower, following, resultId: result?._id },
+            user: follower
+        });
+
         return handleHttp(res, {
             status: 200,
             message: "Has dejado de seguir al usuario",
@@ -62,18 +89,31 @@ export const unfollowUserCtrl = async (req, res) => {
         let status = 500;
         let message = "Error interno al dejar de seguir";
         let errorCode = "SERVER_ERROR";
+        let logLevel = "error";
+        let logMessage = "Error interno al dejar de seguir";
 
         if (error.code === "NO_SELF_UNFOLLOW") {
             status = 400;
             message = "No puedes dejar de seguirte a ti mismo";
             errorCode = "INVALID_ACTION";
+            logLevel = "warn";
+            logMessage = "Intento de auto-dejar de seguir";
         }
 
         if (error.code === "NOT_FOLLOWING") {
             status = 400;
             message = "No estás siguiendo a este usuario";
             errorCode = "NOT_FOLLOWING";
+            logLevel = "warn";
+            logMessage = "Intento de dejar de seguir a un usuario no seguido";
         }
+
+        await createLogService({
+            level: logLevel,
+            message: logMessage,
+            meta: { follower: req.user._id, following: req.params.userId, error: error?.message, code: error?.code, stack: error?.stack },
+            user: req.user._id
+        });
 
         return handleHttp(res, {
             status,
@@ -117,12 +157,26 @@ export const getMyFollowingCtrl = async (req, res) => {
         const userId = req.user._id;
         const following = await getMyFollowing(userId);
 
+        await createLogService({
+            level: "info",
+            message: "Usuarios seguidos obtenidos correctamente",
+            meta: { userId, count: following?.length ?? 0 },
+            user: userId
+        });
+
         return handleHttp(res, {
             status: 200,
             message: "Usuarios seguidos obtenidos correctamente",
             data: following,
         });
     } catch (error) {
+        await createLogService({
+            level: "error",
+            message: "Error al obtener usuarios seguidos",
+            meta: { userId: req?.user?._id, error: error?.message, stack: error?.stack },
+            user: req?.user?._id
+        });
+
         return handleHttp(res, {
             status: 500,
             message: "Error al obtener usuarios seguidos",
@@ -140,12 +194,26 @@ export const getMyFollowersCtrl = async (req, res) => {
         const userId = req.user._id;
         const followers = await getMyFollowers(userId);
 
+        await createLogService({
+            level: "info",
+            message: "Seguidores obtenidos correctamente",
+            meta: { userId, count: followers?.length ?? 0 },
+            user: userId
+        });
+
         return handleHttp(res, {
             status: 200,
             message: "Seguidores obtenidos correctamente",
             data: followers,
         });
     } catch (error) {
+        await createLogService({
+            level: "error",
+            message: "Error al obtener seguidores",
+            meta: { userId: req?.user?._id, error: error?.message, stack: error?.stack },
+            user: req?.user?._id
+        });
+
         return handleHttp(res, {
             status: 500,
             message: "Error al obtener seguidores",
@@ -163,12 +231,26 @@ export const getPublicFollowingCtrl = async (req, res) => {
         const userId = req.params.userId;
         const following = await getPublicFollowing(userId);
 
+        await createLogService({
+            level: "info",
+            message: "Usuarios seguidos públicos obtenidos correctamente",
+            meta: { publicUserId: userId, count: following?.length ?? 0, requestedBy: req?.user?._id },
+            user: req?.user?._id
+        });
+
         return handleHttp(res, {
             status: 200,
             message: "Usuarios seguidos obtenidos correctamente",
             data: following,
         });
     } catch (error) {
+        await createLogService({
+            level: "error",
+            message: "Error al obtener usuarios seguidos públicos",
+            meta: { publicUserId: req.params.userId, requestedBy: req?.user?._id, error: error?.message, stack: error?.stack },
+            user: req?.user?._id
+        });
+
         return handleHttp(res, {
             status: 500,
             message: "Error al obtener usuarios seguidos",
@@ -186,12 +268,26 @@ export const getPublicFollowersCtrl = async (req, res) => {
         const userId = req.params.userId;
         const followers = await getPublicFollowers(userId);
 
+        await createLogService({
+            level: "info",
+            message: "Seguidores públicos obtenidos correctamente",
+            meta: { publicUserId: userId, count: followers?.length ?? 0, requestedBy: req?.user?._id },
+            user: req?.user?._id
+        });
+
         return handleHttp(res, {
             status: 200,
             message: "Seguidores obtenidos correctamente",
             data: followers,
         });
     } catch (error) {
+        await createLogService({
+            level: "error",
+            message: "Error al obtener seguidores públicos",
+            meta: { publicUserId: req.params.userId, requestedBy: req?.user?._id, error: error?.message, stack: error?.stack },
+            user: req?.user?._id
+        });
+
         return handleHttp(res, {
             status: 500,
             message: "Error al obtener seguidores",
