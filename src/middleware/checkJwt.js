@@ -44,7 +44,10 @@ export const checkJwt = async (req, res, next) => {
         // Inyectamos info en req/res.locals
         req.user = {
             _id: user._id,
-            role: user.role
+            role: user.role,
+            handle: user.handle,
+            displayName: user.displayName,
+            avatar: user.avatar
         };
 
         res.locals.newToken = newToken;
