@@ -1,6 +1,7 @@
 // controllers/post.js
 import { createPostService, deletePostService, getAllPostsService, getFeedPostsService, getPostByIdService, getPostsByUserService, getRepliesService } from "../services/postService.js";
 import { handleHttp } from "../utils/res.handle.js";
+import { createLogService } from "../services/logService.js";
 
 /**
  * Crea un nuevo post.

@@ -1,5 +1,6 @@
 import { followUser, getFollowStatus, getMyFollowers, getMyFollowing, getPublicFollowers, getPublicFollowing, unfollowUser } from "../services/followUserService.js";
 import { handleHttp } from "../utils/res.handle.js";
+import { createLogService } from "../services/logService.js";
 
 /**
  * Sigue a un usuario (POST /api/follow/:userId)

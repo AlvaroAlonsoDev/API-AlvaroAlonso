@@ -1,5 +1,6 @@
 import { createRating, deleteRatingById, getRatingsGivenByUser, getRatingsHistory, getUserRatingsStats } from "../services/ratingService.js";
 import { handleHttp } from "../utils/res.handle.js";
+import { createLogService } from "../services/logService.js";
 
 /**
  * Devuelve el promedio de valoraciones por aspecto de un usuario.
