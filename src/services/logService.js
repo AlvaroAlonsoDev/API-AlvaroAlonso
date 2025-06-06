@@ -22,10 +22,21 @@ export const getLogsService = async ({ page = 1, limit = 50, level, userId, date
     }
 
     const skip = (page - 1) * limit;
-    const [logs, total] = await Promise.all([
-        LogModel.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-        LogModel.countDocuments(query)
-    ]);
+
+    const logsPromise = LogModel.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate({
+            path: "user",
+            select: "handle displayName avatar _id"
+        })
+        .lean();
+
+    const totalPromise = LogModel.countDocuments(query);
+
+    const [logs, total] = await Promise.all([logsPromise, totalPromise]);
 
     return { logs, total, page, limit };
 };
+

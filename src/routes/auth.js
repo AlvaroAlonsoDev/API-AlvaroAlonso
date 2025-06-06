@@ -13,7 +13,6 @@ import {
     getCloseToMeCtrl
 } from "../controllers/authController.js";
 import { checkJwt } from "../middleware/checkJwt.js";
-import { get } from "mongoose";
 // import { uploadAvatar } from "../middleware/uploadImage.js";
 
 const router = Router();
